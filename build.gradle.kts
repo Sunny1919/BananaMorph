@@ -11,9 +11,9 @@ plugins {
     java
     `maven-publish`
     id("net.minecrell.plugin-yml.paper") version "0.6.0" // Generates plugin.yml
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
-    id("xyz.jpenilla.run-paper") version "3.0.2" // Adds runServer and runMojangMappedServer tasks for testing
-    id("com.gradleup.shadow") version "9.1.0" // Shadow PluginBase
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14"
+    id("xyz.jpenilla.run-paper") version "2.3.1" // Adds runServer and runMojangMappedServer tasks for testing
+    id("io.github.goooler.shadow") version "8.1.7" // Shadow PluginBase
 }
 
 repositories {
@@ -22,6 +22,10 @@ repositories {
 
     maven {
         url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
+
+    maven {
+        url = uri("https://repo.codemc.io/repository/maven-releases/")
     }
 
     maven {
@@ -68,74 +72,45 @@ repositories {
             includeGroup("com.palmergames.bukkit.towny")
         }
     }
-
-    maven {
-        url = uri("https://repo.codemc.io/repository/maven-releases/")
-        content {
-            includeGroup("com.github.retrooper")
-        }
-    }
-
-    maven {
-        url = uri("https://repo.codemc.io/repository/maven-snapshots/")
-        content {
-            includeGroup("com.github.retrooper")
-        }
-    }
 }
 
 paperweight.reobfArtifactConfiguration = ReobfArtifactConfiguration.MOJANG_PRODUCTION
 
-fun Project.configureUnstableAdventureStrategy() {
-    configurations.configureEach {
-        resolutionStrategy.capabilitiesResolution.all {
-            if (candidates.size == 2) {
-                // Select unstable Paper variant over stable Kyori variant
-                val unstable = candidates.find { c -> c.id.displayName.startsWith("io.papermc") }
-                val stable = candidates.find { c -> c.id.displayName.startsWith("net.kyori") }
-                if (unstable != null && stable != null) {
-                    select(unstable)
-                }
-            }
-        }
-    }
-}
-
 dependencies {
     paperweight.paperDevBundle("${project.property("minecraft_version")}")
 
-    // Fix from Paper discord, see #dev-announcements !
-    configureUnstableAdventureStrategy()
-
-    if (project.property("packetevents_use_local_build") == "true") {
-        System.out.println("We are using local PE build!")
-        compileOnly(files("libs/packetevents.jar"))
-    } else {
-        compileOnly("com.github.retrooper:packetevents-spigot:${project.property("packetevents_version")}")
-        {
-        }
+    implementation("io.github.retrooper:packetevents-spigot:2.4.0")
+    {
+        exclude("org.yaml")
     }
 
     compileOnly(files("libs/CMILib1.4.3.5.jar"))
     compileOnly(files("libs/Residence5.1.4.0.jar"))
-    compileOnly(files("libs/pingwheel-plugin-forked-1.0.0-all.jar"))
 
     compileOnly("com.palmergames.bukkit.towny:towny:${project.property("towny_version")}")
     {
         isTransitive = false
     }
 
+    compileOnly("com.ticxo.modelengine:ModelEngine:${project.property("me_version")}")
+    {
+        isTransitive = false
+    }
+
+    //compileOnly("com.github.Gecolay:GSit:${project.property("gsit_version")}")
     compileOnly("me.clip:placeholderapi:${project.property("papi_version")}")
     {
         isTransitive = false
     }
 
-    implementation("org.java-websocket:Java-WebSocket:1.6.0")
+    implementation("org.java-websocket:Java-WebSocket:1.5.7")
     {
         exclude("org.slf4j")
     }
 
-    implementation("com.github.MATRIX-feather:InventoryGui:791e7bdd65")
+    implementation("com.github.MATRIX-feather:InventoryGui:5b9617812f")
+
+    //compileOnly("dev.majek:hexnicks:3.1.1")
 
     implementation("org.bstats:bstats-bukkit:${project.property("bstats_version")}")
     {
@@ -146,12 +121,7 @@ dependencies {
         project.property("protocols_local_version")
         else project.property("protocols_version");
 
-    val compatLayerVersion = "${project.property("compat_layer_version")}"
-
-    implementation("com.github.NiFeather:feathermorph-command-compat-layer:$compatLayerVersion")
-
     implementation("com.github.NiFeather:feathermorph-protocols:${protocolVersion}")
-
     implementation("com.github.XiaMoZhiShi:PluginBase:${project.property("pluginbase_version")}")
     {
         exclude("com.google.code.gson", "gson")
@@ -161,7 +131,7 @@ dependencies {
 group = "xyz.nifeather.morph"
 version = "${project.property("project_version")}"
 description = "Yet another disguise plugin, that introduces the morph feature to the server, similar to the MetaMorph mod"
-java.sourceCompatibility = JavaVersion.VERSION_25
+java.sourceCompatibility = JavaVersion.VERSION_21
 
 paper {
     load = BukkitPluginDescription.PluginLoadOrder.POSTWORLD
@@ -171,12 +141,6 @@ paper {
     authors = listOf("MATRIX-feather")
 
     serverDependencies {
-        register("packetevents") {
-            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
-            required = false
-            joinClasspath = true
-        }
-
         register("Residence") {
             load = PaperPluginDescription.RelativeLoadOrder.BEFORE
             required = false
@@ -200,12 +164,6 @@ paper {
             required = false
             joinClasspath = true
         }
-
-        register("PingWheelPluginForked") {
-            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
-            required = false
-            joinClasspath = true
-        }
     }
 
     version = "${project.property("project_version")}"
@@ -213,56 +171,35 @@ paper {
     name = "FeatherMorph"
     foliaSupported = true
 
-    permissions { /* See below */ }
-
     val permissionRoot = "feathermorph."
 
-    val defaultAvailablePermissions = listOf(
-            permissionRoot + "morph",
-            permissionRoot + "unmorph",
-            permissionRoot + "headmorph",
+    permissions {
+        register(permissionRoot + "morph")
+        register(permissionRoot + "unmorph")
+        register(permissionRoot + "headmorph")
 
-            permissionRoot + "skill",
-            permissionRoot + "ability",
-            permissionRoot + "mirror",
-            permissionRoot + "chatoverride",
+        register(permissionRoot + "skill")
+        register(permissionRoot + "ability")
+        register(permissionRoot + "mirror")
+        register(permissionRoot + "chatoverride")
 
-            permissionRoot + "request",
-            permissionRoot + "request.send",
-            permissionRoot + "request.accept",
-            permissionRoot + "request.deny",
+        register(permissionRoot + "request") {
+            childrenMap = mapOf(
+                    (permissionRoot + "request.send") to true,
+                    (permissionRoot + "request.accept") to true,
+                    (permissionRoot + "request.deny") to true
+            )
+        }
 
-            permissionRoot + "can_fly",
-            permissionRoot + "toggle_town_fly",
-
-            permissionRoot + "magic_bottle.use",
-
-            permissionRoot + "acquire_morph",
-
-            permissionRoot + "custom_text",
-
-            permissionRoot + "disguise_properties" + ".use"
-    );
-
-    defaultAvailablePermissions.forEach {
-        perm -> permissions.register(perm).get().default = BukkitPluginDescription.Permission.Default.TRUE;
+        register(permissionRoot + "can_fly")
+        register(permissionRoot + "toggle_town_fly")
     }
 
-    val defaultDenyPermissions = listOf(
-            permissionRoot + "magic_bottle.exclude",
-
-            permissionRoot + "can_fly.always",
-
-            permissionRoot + "disguise_use_real_uuid",
-
-            permissionRoot + "mirror.mannequin"
-    )
-
-    defaultDenyPermissions.forEach {
-        perm -> permissions.register(perm).get().default = BukkitPluginDescription.Permission.Default.FALSE;
+    permissions.forEach {
+        permission -> permission.default = BukkitPluginDescription.Permission.Default.TRUE
     }
 
-    val opPermissions = listOf(
+    val opPermsStrList = listOf(
             permissionRoot + "disguise_revealing",
 
             permissionRoot + "manage",
@@ -284,14 +221,14 @@ paper {
 
             permissionRoot + "mirror.immune",
 
-            permissionRoot + "admin",
-            permissionRoot + "custom_skin",
-            permissionRoot + "disguise_properties" + ".custom_skin_on_items"
+            permissionRoot + "admin"
     );
 
-    opPermissions.forEach {
+    opPermsStrList.forEach {
         permStr -> permissions.register(permStr).get().default = BukkitPluginDescription.Permission.Default.OP;
     }
+
+    permissions.register(permissionRoot + "can_fly.always").get().default = BukkitPluginDescription.Permission.Default.FALSE;
 }
 
 publishing {
@@ -307,13 +244,11 @@ java {
     withSourcesJar()
 }
 
-runPaper.folia.registerTask()
-
 // See https://github.com/jpenilla/run-task/wiki/Debugging#hot-swap
 tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     javaLauncher = javaToolchains.launcherFor {
         vendor = JvmVendorSpec.JETBRAINS
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 
     jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-Dbstats.relocatecheck=false")
@@ -342,11 +277,12 @@ tasks.shadowJar {
     //                                                                                                                            ❜
     if (System.getenv("NO_RELOCATE") == "yes")
     {
-        println("Not relocating classes!")
+        System.out.println("Not relocating classes!")
     }
     else
     {
         minimize()
+        relocate("com.github.retrooper", "xyz.nifeather.morph.shaded.packetevents")
         relocate("xiamomc.pluginbase", "xyz.nifeather.morph.shaded.pluginbase")
         relocate("org.bstats", "xyz.nifeather.morph.shaded.bstats")
         relocate("de.tr7zw.changeme.nbtapi", "xyz.nifeather.morph.shaded.nbtapi")
@@ -359,7 +295,6 @@ tasks.shadowJar {
 // https://stackoverflow.com/a/74848372
 tasks.withType<Jar> {
     exclude("plugin.yml")
-    from("LICENSE")
 }
 
 tasks.withType<JavaCompile>() {
