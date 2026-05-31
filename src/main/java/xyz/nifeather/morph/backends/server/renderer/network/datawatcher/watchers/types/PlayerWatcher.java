@@ -1,0 +1,109 @@
+package xyz.nifeather.morph.backends.server.renderer.network.datawatcher.watchers.types;
+
+
+import com.destroystokyo.paper.ClientOption;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Pose;
+import org.joml.Vector3i;
+import xyz.nifeather.morph.backends.server.renderer.network.DisplayParameters;
+import xyz.nifeather.morph.backends.server.renderer.network.registries.CustomEntries;
+import xyz.nifeather.morph.backends.server.renderer.network.registries.CustomEntry;
+import xyz.nifeather.morph.backends.server.renderer.network.registries.ValueIndex;
+import xyz.nifeather.morph.misc.AnimationNames;
+import xyz.nifeather.morph.misc.NmsRecord;
+
+import java.util.Optional;
+
+public class PlayerWatcher extends InventoryLivingWatcher
+{
+    @Override
+    protected void initRegistry()
+    {
+        super.initRegistry();
+
+        register(ValueIndex.PLAYER);
+    }
+
+    public PlayerWatcher(Player bindingPlayer)
+    {
+        super(bindingPlayer, EntityType.PLAYER);
+    }
+
+    @Override
+    protected void doSync()
+    {
+        super.doSync();
+
+        var bindingPlayer = getBindingPlayer();
+        this.writeTemp(ValueIndex.PLAYER.SKIN_FLAGS, (byte)bindingPlayer.getClientOption(ClientOption.SKIN_PARTS).getRaw());
+        this.writeTemp(ValueIndex.PLAYER.MAINHAND, (byte)bindingPlayer.getMainHand().ordinal());
+    }
+
+    @Override
+    protected <X> void onEntryWrite(CustomEntry<X> entry, X oldVal, X newVal)
+    {
+        super.onEntryWrite(entry, oldVal, newVal);
+
+        if (entry.equals(CustomEntries.PROFILE) && isPlayerOnline() && !isSilent())
+        {
+            var player = getBindingPlayer();
+            var affected = getAffectedPlayers(player);
+
+            if (!affected.isEmpty())
+            {
+                var spawnPackets = getPacketFactory()
+                        .buildSpawnPackets(new DisplayParameters(this));
+
+                var packetRemove = new ClientboundRemoveEntitiesPacket(player.getEntityId());
+
+                affected.forEach(p ->
+                {
+                    var nmsPlayer = NmsRecord.ofPlayer(p);
+                    if (nmsPlayer.connection != null)
+                    {
+                        nmsPlayer.connection.sendPacket(packetRemove);
+
+                        spawnPackets.forEach(packet -> nmsPlayer.connection.sendPacket(packet));
+                    }
+                });
+            }
+        }
+
+        if (entry.equals(CustomEntries.ANIMATION))
+        {
+            var animId = newVal + "";
+
+            switch (animId)
+            {
+                case AnimationNames.LAY ->
+                {
+                    this.remove(ValueIndex.PLAYER.POSE);
+                    this.writePersistent(ValueIndex.PLAYER.POSE, Pose.SLEEPING);
+
+                    var playerPos = getBindingPlayer().getLocation();
+                    var vec3i = new Vector3i(playerPos.getBlockX(), playerPos.getBlockY(), playerPos.getBlockZ());
+                    this.writePersistent(ValueIndex.PLAYER.BED_POS, Optional.of(vec3i));
+                }
+                case AnimationNames.CRAWL ->
+                {
+                    resetValues();
+                    this.writePersistent(ValueIndex.PLAYER.POSE, Pose.SWIMMING);
+                }
+                case AnimationNames.STANDUP, AnimationNames.RESET ->
+                {
+                    this.writePersistent(ValueIndex.PLAYER.POSE, getBindingPlayer().getPose());
+                    resetValues();
+                }
+            }
+        }
+    }
+
+    private void resetValues()
+    {
+        this.remove(ValueIndex.PLAYER.POSE);
+        this.writePersistent(ValueIndex.PLAYER.BED_POS, Optional.empty());
+        this.remove(ValueIndex.PLAYER.BED_POS);
+    }
+}

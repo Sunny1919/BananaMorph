@@ -1,0 +1,39 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "xyz.nifeather.morph.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AllayMixin",
+    "DataTrackerMixin",
+    "EnderDragonEntityMixin",
+    "FoxMixin",
+    "LivingEntityMixin",
+    "accessors.PlayerAccessor",
+    "accessors.ShulkerEntityAccessor"
+  ],
+  "client": [
+    "CameraMixin",
+    "ClientPlayerEntityMixin",
+    "ClientPlayerInteractionManagerMixin",
+    "ClientWorldMixin",
+    "CreativeInventoryMixin",
+    "EntityMixin",
+    "EntityRendererMixin",
+    "InventoryScreenMixin",
+    "MinecraftClientMixin",
+    "PlayerEntityRendererMixin",
+    "PlayerMixin",
+    "WorldRendererMixin",
+    "accessors.AbstractHorseEntityMixin",
+    "accessors.ArmorStandEntityAccessor",
+    "accessors.DragonEntityRendererAccessor",
+    "accessors.EntityAccessor",
+    "accessors.LimbAnimatorAccessor",
+    "accessors.LivingRendererAccessor",
+    "accessors.UtilAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

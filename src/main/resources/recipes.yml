@@ -1,0 +1,61 @@
+# - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x -
+#
+# Please note that we only provide a very basic crafting recipe support.
+# We recommend using other recipe plugins to get more advanced management experience!
+#
+# - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x - x -
+root:
+  # Item crafting options
+  item_crafting:
+    # Options for the Disguise Tool
+    #
+    # PS:
+    #     You can make an item a disguise tool by executing `/fm make_disguise_tool` command
+    #     while holding it on your main hand.
+    #
+    #     You can also give yourself a disguise tool by setting its custom data:
+    #       `/give @s minecraft:feather[minecraft:custom_data={"feathermorph:is_disguise_tool": true}]`
+    disguise_tool:
+      enabled: true
+
+      # Should this recipe shapeless?
+      shapeless: true
+
+      # The crafting shape for this recipe
+      # Doesn't work if shapeless is enabled
+      crafting_shape:
+        - ABC
+        - DEF
+        - GHI
+
+      # The material of the crafted result
+      result_material: minecraft:feather
+
+      # The name for the item
+      # Use "~UNSET" to keep the material's original name
+      # Supports MiniMessage
+      result_item_name: "Disguise Tool"
+
+      # The lore for the item
+      #
+      # Example:
+      # result_item_lore:
+      #   - Lore1
+      #   - <rainbow>Supports MiniMessage!
+      result_item_lore:
+        - "<italic:false><#666666>When sneaking: "
+        - "<italic:false><gray><key:key.mouse.right> ~> Open disguise selection or invoke quick disguise"
+        - "<italic:false><gray><key:key.mouse.left> ~> Unmorph(Undisguise)"
+        - ""
+        - "<italic:false><#666666>When disguising"
+        - "<italic:false><gray><key:key.mouse.right> ~> Activate skill"
+        - "<italic:false><gray><key:key.mouse.left> ~> Open Disguise Action selection"
+
+      # Materials required to craft this item.
+      # Left side is the letter present in crafting_shape, and right side is the item ID
+      crafting_materials:
+        A: minecraft:feather
+        B: minecraft:redstone
+
+  # Don't touch unless you know what you're doing!
+  version: 1
