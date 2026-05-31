@@ -79,7 +79,7 @@ paperweight.reobfArtifactConfiguration = ReobfArtifactConfiguration.MOJANG_PRODU
 dependencies {
     paperweight.paperDevBundle("${project.property("minecraft_version")}")
 
-    implementation("io.github.retrooper:packetevents-spigot:2.4.0")
+    implementation("com.github.retrooper:packetevents-spigot:2.12.1")
     {
         exclude("org.yaml")
     }
