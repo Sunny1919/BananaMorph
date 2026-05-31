@@ -28,6 +28,9 @@ repositories {
     maven {
         url = uri("https://repo.codemc.io/repository/maven-releases/")
     }
+    maven {
+        url = uri("https://repo.codemc.io/repository/maven-snapshots/")
+    }
 
     maven {
         url = uri("https://jitpack.io")
@@ -80,7 +83,7 @@ paperweight.reobfArtifactConfiguration = ReobfArtifactConfiguration.MOJANG_PRODU
 dependencies {
     paperweight.paperDevBundle("${project.property("minecraft_version")}")
 
-    implementation("com.github.retrooper:packetevents-spigot:2.4.0") {
+    implementation("com.github.retrooper:packetevents-spigot:2.12.1") {
         exclude(group = "org.yaml")
     }
 
@@ -121,10 +124,14 @@ dependencies {
         project.property("protocols_local_version")
         else project.property("protocols_version");
 
-    implementation("com.github.NiFeather:feathermorph-protocols:${protocolVersion}")
-    implementation("com.github.XiaMoZhiShi:PluginBase:${project.property("pluginbase_version")}")
-    {
-        exclude("com.google.code.gson", "gson")
+    implementation("com.github.NiFeather:feathermorph-protocols:${protocolVersion}") {
+        exclude(group = "com.github.retrooper")
+        exclude(group = "io.github.retrooper")
+    }
+    implementation("com.github.XiaMoZhiShi:PluginBase:${project.property("pluginbase_version")}") {
+        exclude(group = "com.google.code.gson", module = "gson")
+        exclude(group = "com.github.retrooper")
+        exclude(group = "io.github.retrooper")
     }
 }
 
