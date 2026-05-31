@@ -69,12 +69,12 @@ public class ReflectionUtils
 
     private static final Map<ServerPlayer, Field> playerEHFieldMap = new Object2ObjectOpenHashMap<>();
 
-    public static <T> T getValue(Object obj, String fieldName, Class<T> type) throws NullDependencyException
+    public static <T> T getValue(Object obj, String fieldName, Class<T> type)
     {
         return getValue(obj, fieldName, type, true);
     }
 
-    public static <T> T getValue(Object obj, String fieldName, Class<T> type, boolean includeBaseClasses) throws NullDependencyException
+    public static <T> T getValue(Object obj, String fieldName, Class<T> type, boolean includeBaseClasses)
     {
         var fields = ReflectionUtils.getFields(obj, type, true);
 
@@ -145,5 +145,35 @@ public class ReflectionUtils
 
         if (clazz.getSuperclass() != null)
             searchFields(clazz.getSuperclass(), fields);
+    }
+
+    public static void setValue(Object obj, String fieldName, Object value)
+    {
+        try
+        {
+            Field targetField = null;
+            Class<?> clazz = obj.getClass();
+            while (clazz != null)
+            {
+                try
+                {
+                    targetField = clazz.getDeclaredField(fieldName);
+                    break;
+                }
+                catch (NoSuchFieldException e)
+                {
+                    clazz = clazz.getSuperclass();
+                }
+            }
+            if (targetField == null)
+                throw new NullDependencyException("Field '%s' not found in '%s'".formatted(fieldName, obj));
+
+            targetField.setAccessible(true);
+            targetField.set(obj, value);
+        }
+        catch (Throwable t)
+        {
+            throw new RuntimeException(t);
+        }
     }
 }
