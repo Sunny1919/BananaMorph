@@ -19,6 +19,7 @@ plugins {
 repositories {
     mavenLocal()
     gradlePluginPortal()
+    mavenCentral()
 
     maven {
         url = uri("https://repo.papermc.io/repository/maven-public/")
@@ -79,9 +80,8 @@ paperweight.reobfArtifactConfiguration = ReobfArtifactConfiguration.MOJANG_PRODU
 dependencies {
     paperweight.paperDevBundle("${project.property("minecraft_version")}")
 
-    implementation("com.github.retrooper:packetevents-spigot:2.4.0")
-    {
-        exclude("org.yaml")
+    implementation("com.github.retrooper:packetevents-spigot:2.4.0") {
+        exclude(group = "org.yaml")
     }
 
     compileOnly(files("libs/CMILib1.4.3.5.jar"))
